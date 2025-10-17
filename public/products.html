@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="גלה את מגוון המשחקים והצעצועים שלנו - משחקי קופסה, משחקי לוח, צעצועים חינוכיים ומשחקים אסטרטגיים לכל הגילאים.">
+    <meta name="keywords" content="משחקים, צעצועים, משחקי קופסה, משחקי לוח, קטלוג מוצרים">
+    <title>מוצרים - That's Why We Clash</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="assets/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512x512.png">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+    <!-- Cookie Consent -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanilla-cookieconsent@3/dist/cookieconsent.css" />
+    <script src="https://cdn.jsdelivr.net/npm/vanilla-cookieconsent@3/dist/cookieconsent.umd.js"></script>
+    <!-- Mickidum Accessibility Toolbar -->
+    <script src="https://cdn.jsdelivr.net/gh/mickidum/acc_toolbar/acctoolbar/acctoolbar.min.js"></script>
+<!-- Zappy Analytics -->
+<script>
+(function() {
+  'use strict';
+  
+  // Configuration
+  var config = {
+    websiteId: 'a85a5a25-0abb-416b-bf27-2695974b1ce0',
+    apiUrl: 'https://api.zappy5.com/api/analytics/track',
+    sessionDuration: 30 * 60 * 1000, // 30 minutes
+    trackPageViews: true,
+    trackClicks: true,
+    trackFormSubmissions: true
+  };
+  
+  // Generate or retrieve session ID
+  function getSessionId() {
+    var sessionKey = 'zappy_session_' + config.websiteId;
+    var session = null;
+    
+    try {
+      session = sessionStorage.getItem(sessionKey);
+      if (session) {
+        var sessionData = JSON.parse(session);
+        var now = Date.now();
+        
+        // Check if session is still valid
+        if (now - sessionData.timestamp < config.sessionDuration) {
+          // Update timestamp
+          sessionData.timestamp = now;
+          sessionStorage.setItem(sessionKey, JSON.stringify(sessionData));
+          return sessionData.id;
+        }
+      }
+    } catch (e) {
+      console.warn('Zappy Analytics: SessionStorage not available');
+    }
+    
+    // Generate new session ID
+    var newSessionId = 'zs_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
+    try {
+      sessionStorage.setItem(sessionKey, JSON.stringify({
+        id: newSessionId,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      // Continue without session storage
+    }
+    
+    return newSessionId;
+  }
+  
+  var sessionId = getSessionId();
+  
+  // Track an event
+  function trackEvent(eventType, data) {
+    data = data || {};
+    
+    var eventData = {
+      website_id: config.websiteId,
+      event_type: eventType,
+      page_path: window.location.pathname,
+      referrer: document.referrer || 'direct',
+      session_id: sessionId,
+      metadata: data
+    };
+    
+    // Use sendBeacon if available (better for page unload events)
+    if (navigator.sendBeacon) {
+      var blob = new Blob([JSON.stringify(eventData)], { type: 'application/json' });
+      navigator.sendBeacon(config.apiUrl, blob);
+    } else {
+      // Fallback to fetch
+      fetch(config.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventData),
+        keepalive: true
+      }).catch(function(error) {
+        console.warn('Zappy Analytics: Failed to track event', error);
+      });
+    }
+  }
+  
+  // Track page view
+  if (config.trackPageViews) {
+    trackEvent('pageview', {
+      title: document.title,
+      url: window.location.href
+    });
+  }
+  
+  // Track clicks on important elements
+  if (config.trackClicks) {
+    document.addEventListener('click', function(e) {
+      var target = e.target;
+      
+      // Track button clicks
+      if (target.tagName === 'BUTTON' || target.closest('button')) {
+        var button = target.tagName === 'BUTTON' ? target : target.closest('button');
+        trackEvent('click', {
+          element: 'button',
+          text: button.textContent.trim().substring(0, 100),
+          id: button.id || null,
+          class: button.className || null
+        });
+      }
+      
+      // Track link clicks
+      else if (target.tagName === 'A' || target.closest('a')) {
+        var link = target.tagName === 'A' ? target : target.closest('a');
+        trackEvent('click', {
+          element: 'link',
+          text: link.textContent.trim().substring(0, 100),
+          href: link.href,
+          external: link.hostname !== window.location.hostname
+        });
+      }
+    }, true);
+  }
+  
+  // Track form submissions
+  if (config.trackFormSubmissions) {
+    document.addEventListener('submit', function(e) {
+      var form = e.target;
+      
+      trackEvent('form_submit', {
+        form_id: form.id || null,
+        form_name: form.name || null,
+        form_action: form.action || null,
+        form_method: form.method || 'GET'
+      });
+    }, true);
+  }
+  
+  // Track time on page (send on page unload)
+  var pageLoadTime = Date.now();
+  
+  window.addEventListener('beforeunload', function() {
+    var timeOnPage = Math.floor((Date.now() - pageLoadTime) / 1000); // in seconds
+    
+    trackEvent('page_unload', {
+      time_on_page: timeOnPage,
+      page_path: window.location.pathname
+    });
+  });
+  
+  // Expose tracking function globally for custom events
+  window.zappyAnalytics = {
+    track: trackEvent,
+    getSessionId: function() { return sessionId; }
+  };
+  
+})();
+</script>
+<!-- End Zappy Analytics -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="nav-brand"><a href="/" class="logo-link" aria-label="Home" style="display: inline-block; text-decoration: none; line-height: 0; margin-right: 0; vertical-align: middle;"><img src="assets/that-s-why-we-clash-logo.webp" alt="That's Why we Clash" class="logo" style="max-height: 60px; height: auto; width: auto; max-width: 250px; object-fit: contain; background: transparent; image-rendering: crisp-edges;" /></a><span class="brand-title">That's Why We Clash</span>
+            </div>
+            
+            <button class="mobile-toggle" id="mobileToggle" aria-label="תפריט">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="/products" class="active">מוצרים</a></li>
+                <li><a href="/about">אודות</a></li>
+                <li><a href="/contact">צור קשר</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>המוצרים שלנו</h1>
+            <p>גלה את מגוון המשחקים והצעצועים המרתקים שיש לנו להציע</p>
+        </div>
+    </section>
+
+    <section class="products-section">
+        <div class="container">
+            <div class="products-intro">
+                <h2>קטגוריות מוצרים</h2>
+                <p>אנחנו מציעים מגוון רחב של משחקים וצעצועים איכוותיים שמתאימים לכל גיל ותחומי עניין. מהמשחקים הקלאסיים ועד החידושים האחרונים מהעולם - תמצאו הכל כאן.</p>
+            </div>
+
+            <div class="category-showcase">
+                <div class="showcase-item">
+                    <div class="showcase-image">
+                        <img src="assets/business-hero.webp" alt="משחקי קופסה אסטרטגיים">
+                    </div>
+                    <div class="showcase-content">
+                        <h3>משחקי קופסה אסטרטגיים</h3>
+                        <p>משחקים מרתקים שמשלבים אסטרטגיה, תכנון ויכולת חשיבה מתקדמת. מתאים לשחקנים מנוסים ולמשפחות שאוהבות אתגרים. כולל משחקים כמו Catan, Ticket to Ride, Carcassonne ועוד עשרות משחקים מובילים.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> משחקים לשחקנים בודדים ולקבוצות</li>
+                            <li><i class="fas fa-check"></i> רמות קושי משתנות</li>
+                            <li><i class="fas fa-check"></i> זמני משחק גמישים</li>
+                            <li><i class="fas fa-check"></i> מתאים לגילאי 10+</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="showcase-item reverse">
+                    <div class="showcase-image">
+                        <img src="assets/business-service-1.webp" alt="צעצועים חינוכיים">
+                    </div>
+                    <div class="showcase-content">
+                        <h3>צעצועים חינוכיים</h3>
+                        <p>צעצועים שמעודדים למידה והתפתחות תוך כדי משחק. מתאים לגילאים הרכים ועד גיל בית הספר, עם דגש על פיתוח מיומנויות קוגניטיביות, מוטוריות וחברתיות.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> פיתוח חשיבה לוגית</li>
+                            <li><i class="fas fa-check"></i> שיפור מיומנויות מוטוריות</li>
+                            <li><i class="fas fa-check"></i> עידוד יצירתיות</li>
+                            <li><i class="fas fa-check"></i> למידה דרך משחק</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="showcase-item">
+                    <div class="showcase-image">
+                        <img src="assets/business-service-2.webp?v=1760716952704" alt="משחקי דמיון ובניה">
+                    </div>
+                    <div class="showcase-content">
+                        <h3>משחקי דמיון ובניה</h3>
+                        <p>עולמות פנטסטיים שמעוררים את הדמיון ומאפשרים לילדים ליצור סיפורים משלהם. כולל דמויות, סטים לבניה, ואביזרים שמעשירים את חווית המשחק.</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> עידוד דמיון ויצירתיות</li>
+                            <li><i class="fas fa-check"></i> פיתוח מיומנויות חברתיות</li>
+                            <li><i class="fas fa-check"></i> משחק חופשי ופתוח</li>
+                            <li><i class="fas fa-check"></i> איכות פרימיום</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="additional-categories">
+                <h2>קטגוריות נוספות</h2>
+                <div class="categories-grid">
+                    <div class="category-box">
+                        <div class="category-icon">
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <h3>פאזלים</h3>
+                        <p>מגוון פאזלים מכל הגדלים והקשיים - מ-100 חלקים ועד 5000 חלקים.</p>
+                    </div>
+                    <div class="category-box">
+                        <div class="category-icon">
+                            <i class="fas fa-cards"></i>
+                        </div>
+                        <h3>משחקי קלפים</h3>
+                        <p>משחקי קלפים קלאסיים ומודרניים לכל הגילאים והאירועים.</p>
+                    </div>
+                    <div class="category-box">
+                        <div class="category-icon">
+                            <i class="fas fa-dice"></i>
+                        </div>
+                        <h3>משחקי קוביות</h3>
+                        <p>משחקים מהירים ומהנים המבוססים על מזל ואסטרטגיה.</p>
+                    </div>
+                    <div class="category-box">
+                        <div class="category-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h3>רובוטיקה וקידוד</h3>
+                        <p>משחקים שמלמדים תכנות ורובוטיקה בצורה מהנה.</p>
+                    </div>
+                    <div class="category-box">
+                        <div class="category-icon">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <h3>יצירה ואמנות</h3>
+                        <p>ערכות יצירה, ציור ואומנות לפיתוח כישורים אמנותיים.</p>
+                    </div>
+                    <div class="category-box">
+                        <div class="category-icon">
+                            <i class="fas fa-football-ball"></i>
+                        </div>
+                        <h3>משחקי חוץ</h3>
+                        <p>משחקים לחצר, לגינה ולפעילות גופנית בחוץ.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>רוצים לדעת יותר?</h2>
+                <p>צוות המומחים שלנו כאן כדי לעזור לכם למצוא את המשחק המושלם</p>
+                <a href="/contact" class="btn btn-primary btn-large">צור קשר</a>
+            </div>
+        </div>
+    </section>
+
+    
+    <!-- Legal Footer -->
+    <footer class="legal-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-main">
+            <p>© 2025 That's Why we Clash. כל הזכויות שמורות.</p>
+            <p class="zappy-attribution">נוצר באמצעות Zappy</p>
+          </div>
+          <div class="footer-social"><a href="[facebook_url]" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+<a href="[instagram_url]" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+<a href="[whatsapp_url]" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                </a></div>
+          <div class="footer-legal">
+            <a href="privacy.html" target="_blank" rel="noopener" aria-label="מדיניות פרטיות">
+              מדיניות פרטיות
+            </a>
+            <span class="separator">|</span>
+            <a href="accessibility.html" target="_blank" rel="noopener" aria-label="נגישות">
+              נגישות
+            </a>
+            <span class="separator">|</span>
+            <a href="terms.html" target="_blank" rel="noopener" aria-label="תנאי שימוש">
+              תנאי שימוש
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <a href="tel:[phone_number]" class="phone-float" aria-label="התקשר אלינו">
+        <i class="fas fa-phone"></i>
+    </a>
+    <a href="https://wa.me/[whatsapp_number]" target="_blank" class="whatsapp-float" aria-label="WhatsApp" rel="noopener noreferrer">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <div data-integration="accessibility:toolbar"></div>
+    <script src="script.js"></script>
+</body>
+</html>
